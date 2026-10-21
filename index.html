@@ -160,6 +160,17 @@ h2{font:400 22px/1.1 var(--font-display)}
   box-shadow:0 6px 20px rgba(0,0,0,.25);animation:tin .2s ease-out}
 .toast.gold{background:var(--gold);color:#2A1A00;font:400 18px/1.25 var(--font-display);padding:14px 18px;text-align:center}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.adm-back{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.adm{width:100%;max-width:460px;max-height:calc(100dvh - 32px);overflow-y:auto;background:var(--panel);color:var(--ink);border:2px solid var(--accent);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.adm-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.adm h2{font-size:20px}
+.adm h4{margin:0 0 6px;font:700 12px/1 var(--font-body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.adm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.adm-row{display:flex;gap:8px}
+.adm-row input{flex:1;min-width:0;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--panel-2);color:var(--ink);font:600 14px var(--font-body)}
+.adm-row input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.adm .btn.alt{background:var(--panel-2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.adm-note{font-size:12px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){
   .hit.pop svg,.spark,.toast,.orb,.bonus{animation:none}
   .float{animation:none;opacity:1}
@@ -263,6 +274,48 @@ h2{font:400 22px/1.1 var(--font-display)}
       </div>
     </aside>
   </main>
+</div>
+<div class="adm-back" id="admBack" hidden>
+  <div class="adm" role="dialog" aria-modal="true" aria-labelledby="admT">
+    <div class="adm-top"><h2 id="admT">🔐 Menú admin</h2><button class="btn alt" id="admX" type="button">Cerrar</button></div>
+    <div>
+      <h4>Dinero</h4>
+      <div class="adm-grid">
+        <button class="btn" type="button" data-adm="m1e3">+$1K</button>
+        <button class="btn" type="button" data-adm="m1e6">+$1M</button>
+        <button class="btn" type="button" data-adm="m1e9">+$1B</button>
+        <button class="btn" type="button" data-adm="m1e12">+$1T</button>
+      </div>
+      <div class="adm-row" style="margin-top:8px">
+        <input id="admAmt" type="number" min="0" inputmode="numeric" placeholder="Cantidad personalizada">
+        <button class="btn" type="button" data-adm="mcustom">Dar</button>
+      </div>
+    </div>
+    <div>
+      <h4>Animales</h4>
+      <div class="adm-grid">
+        <button class="btn" type="button" data-adm="egg1">+1 huevo</button>
+        <button class="btn" type="button" data-adm="egg10">+10 huevos</button>
+        <button class="btn" type="button" data-adm="gold1">+1 huevo dorado</button>
+        <button class="btn" type="button" data-adm="gold10">+10 dorados</button>
+        <button class="btn" type="button" data-adm="hatch">Eclosionar todos</button>
+        <button class="btn" type="button" data-adm="hens">Todos a gallina</button>
+      </div>
+    </div>
+    <div>
+      <h4>Progreso</h4>
+      <div class="adm-grid">
+        <button class="btn" type="button" data-adm="utils">Máx. utilidades</button>
+        <button class="btn" type="button" data-adm="mejs">Máx. mejoras</button>
+        <button class="btn" type="button" data-adm="station">Estación al máx.</button>
+        <button class="btn" type="button" data-adm="achs">Todos los logros</button>
+        <button class="btn" type="button" data-adm="mult">Multiplicador x2</button>
+        <button class="btn" type="button" data-adm="frenzy">Frenesí 15 s</button>
+        <button class="btn" type="button" data-adm="rain">Lluvia de maíz</button>
+      </div>
+    </div>
+    <p class="adm-note">Ctrl + Alt + 9 o Esc para cerrar.</p>
+  </div>
 </div>
 <div id="toasts" aria-live="polite"></div>
 
@@ -975,6 +1028,64 @@ resetBtn.addEventListener('click', function(){
   save();
   render();
   toast('Partida reiniciada');
+});
+
+/* ---------- menú admin secreto (Ctrl + Alt + 9) ---------- */
+var admBack = document.getElementById('admBack');
+function admToggle(open){
+  var on = typeof open === 'boolean' ? open : admBack.hidden;
+  admBack.hidden = !on;
+  if(on){ var f = admBack.querySelector('button[data-adm]'); if(f) f.focus(); }
+}
+function admEggs(n, gold){
+  var room = ABS_MAX - S.animals.length;
+  n = Math.max(0, Math.min(n, room));
+  for(var i = 0; i < n; i++){
+    S.animals.push({id:S.nextId++, stage:0, golden:gold, hatched:false, first:false, prog:0});
+  }
+  if(n < 1) toast('Límite de ' + ABS_MAX + ' animales alcanzado');
+}
+var ADM = {
+  m1e3:function(){ add(1e3); },
+  m1e6:function(){ add(1e6); },
+  m1e9:function(){ add(1e9); },
+  m1e12:function(){ add(1e12); },
+  mcustom:function(){
+    var inp = document.getElementById('admAmt'), v = parseFloat(inp.value);
+    if(isFinite(v) && v > 0){ add(v); inp.value = ''; }
+  },
+  egg1:function(){ admEggs(1, false); },
+  egg10:function(){ admEggs(10, false); },
+  gold1:function(){ admEggs(1, true); },
+  gold10:function(){ admEggs(10, true); },
+  hatch:function(){ S.animals.slice().forEach(function(a){ if(!a.hatched) hatch(a); }); },
+  hens:function(){
+    S.animals.forEach(function(a){ if(!a.hatched){ a.hatched = true; a.stage = 1; if(a.golden) S.golds++; } a.stage = 4; });
+  },
+  utils:function(){ UTIL.forEach(function(u){ S.up[u.id] = u.max; }); },
+  mejs:function(){ MEJ.forEach(function(m){ S.mj[m.id] = m.max; }); },
+  station:function(){ S.station.lvl = ST_MAX; },
+  achs:function(){ ACH.forEach(function(a){ S.ach[a.id] = true; }); },
+  mult:function(){ S.mult *= 2; },
+  frenzy:function(){ frenzyUntil = performance.now() + 15000; S.frenzies++; },
+  rain:function(){ if(!bonusEl) spawnBonus(); }
+};
+admBack.addEventListener('click', function(e){
+  if(e.target === admBack){ admToggle(false); return; }
+  var b = e.target.closest ? e.target.closest('[data-adm]') : null;
+  if(!b || !ADM[b.getAttribute('data-adm')]) return;
+  ADM[b.getAttribute('data-adm')]();
+  save();
+  render();
+});
+document.getElementById('admX').addEventListener('click', function(){ admToggle(false); });
+document.addEventListener('keydown', function(e){
+  if(e.ctrlKey && e.altKey && (e.code === 'Digit9' || e.code === 'Numpad9' || e.key === '9')){
+    e.preventDefault();
+    admToggle();
+  } else if(e.key === 'Escape' && !admBack.hidden){
+    admToggle(false);
+  }
 });
 
 render();
