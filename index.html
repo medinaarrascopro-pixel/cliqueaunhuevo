@@ -1,0 +1,984 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Clicquea un Huevo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Figtree:wght@400;600;700&display=swap">
+<style>
+/* Layout: barra fija arriba con el dinero; la granja a la izquierda y la tienda (incubadora + pestañas) a la derecha. En móvil se apilan. */
+:root{
+  --font-display:'Bagel Fat One','Arial Rounded MT Bold','Trebuchet MS',system-ui,sans-serif;
+  --font-body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --bg:#E7EEE8;
+  --panel:#F8FBF7;
+  --panel-2:#EAF1EB;
+  --ink:#1D2922;
+  --muted:#53635A;
+  --line:#C9D7CC;
+  --accent:#E08A10;
+  --on-accent:#2A1A00;
+  --money:#1F7A47;
+  --gold:#D9A400;
+  --gold-glow:rgba(217,164,0,.28);
+  --focus:#1B6FD8;
+  --space:#161E45;
+  --space-2:#0E1430;
+  --space-line:#2C3868;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101712;--panel:#18221B;--panel-2:#202D24;--ink:#E8F0E9;--muted:#9BAEA1;--line:#2E3E33;
+    --accent:#F0A12A;--on-accent:#2A1A00;--money:#5FD08C;--gold:#F2C531;--gold-glow:rgba(242,197,49,.3);--focus:#6AA8FF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101712;--panel:#18221B;--panel-2:#202D24;--ink:#E8F0E9;--muted:#9BAEA1;--line:#2E3E33;
+  --accent:#F0A12A;--on-accent:#2A1A00;--money:#5FD08C;--gold:#F2C531;--gold-glow:rgba(242,197,49,.3);--focus:#6AA8FF;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg);color:var(--ink);font:400 15px/1.45 var(--font-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 32px;-webkit-tap-highlight-color:transparent;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.page{max-width:1120px;margin:0 auto}
+.brand{padding-block:16px 6px}
+.brand h1{margin:0;font:400 clamp(30px,8vw,44px)/1.05 var(--font-display);text-wrap:balance}
+.brand p{margin:6px 0 0;font-size:16px;font-weight:600;color:var(--muted)}
+h2,h3,p,ul{margin:0}
+ul{padding:0;list-style:none}
+[hidden]{display:none!important}
+
+.hud{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);
+  display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 24px;
+  padding-block:10px 12px;border-bottom:1px solid var(--line);
+}
+.money-l{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.money{font:400 clamp(36px,10vw,54px)/1 var(--font-display);color:var(--money);font-variant-numeric:tabular-nums}
+.stats{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:12px;color:var(--muted)}
+.stats b{display:block;font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+.frenzy{flex-basis:100%;order:3;font:400 15px/1 var(--font-display);padding:8px 12px;border-radius:12px;background:var(--gold);color:#2A1A00;text-align:center}
+
+.wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;padding-top:18px}
+@media (min-width:900px){.wrap{grid-template-columns:minmax(0,1.45fr) minmax(340px,1fr);align-items:start}}
+h2{font:400 22px/1.1 var(--font-display)}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hint{color:var(--muted);margin:6px 0 14px;max-width:62ch}
+
+.pagebar{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+.ptab{flex:none;min-height:34px;padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel);color:var(--muted);
+  font:700 12px/1 var(--font-body);font-variant-numeric:tabular-nums;cursor:pointer;touch-action:manipulation}
+.ptab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.pens{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.pen{position:relative;min-width:0;display:flex;flex-direction:column;gap:6px;padding:10px 10px 12px;
+  background:var(--panel);border:1px solid var(--line);border-radius:18px}
+.pen.gold{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
+.hit{display:block;width:100%;aspect-ratio:1;padding:0;border:0;border-radius:50%;cursor:pointer;
+  background:radial-gradient(circle at 50% 58%,var(--panel-2) 0 60%,transparent 62%);
+  touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.hit svg{display:block;width:100%;height:100%;pointer-events:none}
+.hit.pop svg{animation:pop .2s ease-out}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(.9) rotate(-3deg)}100%{transform:scale(1)}}
+.nm{font:700 15px/1.2 var(--font-body)}
+.val{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.foot{display:flex;flex-direction:column;justify-content:flex-end;gap:5px;min-height:44px;margin-top:auto}
+.bar{height:8px;border-radius:99px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .1s linear}
+.status{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.btn{font:700 14px/1.2 var(--font-body);min-height:42px;padding:10px 12px;border:0;border-radius:12px;
+  background:var(--accent);color:var(--on-accent);cursor:pointer;touch-action:manipulation}
+.btn:not(:disabled):active{transform:translateY(1px)}
+.btn:disabled{background:var(--panel-2);color:var(--muted);cursor:not-allowed;box-shadow:inset 0 0 0 1px var(--line)}
+.btn:focus-visible,.hit:focus-visible,.link:focus-visible,.tab:focus-visible,.st-hit:focus-visible,.bonus:focus-visible,.ptab:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+.float{position:absolute;z-index:3;pointer-events:none;font:400 20px/1 var(--font-display);color:var(--money);
+  text-shadow:0 1px 0 var(--panel),0 0 6px var(--panel);transform:translate(-50%,-50%);animation:rise .85s ease-out forwards;white-space:nowrap}
+.float.crit{color:var(--accent);font-size:26px}
+.float.auto{font-size:15px;opacity:.85}
+.float.space{color:#BFD0FF;text-shadow:0 0 6px var(--space-2)}
+@keyframes rise{from{opacity:1;transform:translate(-50%,-50%)}to{opacity:0;transform:translate(-50%,calc(-50% - 54px))}}
+.spark{animation:tw 1.7s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.15}50%{opacity:1}}
+
+.side{display:flex;flex-direction:column;gap:14px}
+.panel{display:flex;flex-direction:column;gap:12px;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:18px}
+.panel p{color:var(--muted);font-size:14px}
+.incbtn{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;font-size:15px}
+
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:4px;background:var(--panel-2);border:1px solid var(--line);border-radius:14px}
+.tab{min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border:0;border-radius:10px;
+  background:transparent;color:var(--muted);font:700 13px/1.2 var(--font-body);cursor:pointer;touch-action:manipulation}
+.tab[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.tab .n{font-size:11px;font-weight:700;color:var(--money);min-height:13px}
+.lead{margin-top:-6px}
+
+.ups{display:flex;flex-direction:column}
+.up{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding-block:12px;border-top:1px solid var(--line)}
+.up:first-child{border-top:0;padding-top:4px}
+.emo{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--panel-2);font-size:22px;line-height:1}
+.up .txt{min-width:0}
+.up b{display:block}
+.up .d{display:block;font-size:13px;color:var(--muted)}
+.up em{display:block;font-style:normal;font-size:12px;font-weight:700;color:var(--money);margin-top:2px;font-variant-numeric:tabular-nums}
+.up .btn{min-width:92px;font-variant-numeric:tabular-nums}
+.up.locked .emo{filter:grayscale(1);opacity:.5}
+.up.locked b{color:var(--muted)}
+.up.done em{color:var(--gold)}
+
+.station{position:relative;display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:center;padding:12px;margin-bottom:6px;
+  background:linear-gradient(160deg,var(--space),var(--space-2));border:1px solid var(--space-line);border-radius:16px;color:#E8ECFF}
+.station.off .orb{opacity:.3}
+.st-hit{display:block;width:96px;aspect-ratio:1;padding:0;border:0;border-radius:50%;background:none;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.st-hit svg{display:block;width:100%;height:100%;pointer-events:none}
+.orb{transform-origin:60px 60px;animation:orbit 12s linear infinite}
+@keyframes orbit{to{transform:rotate(360deg)}}
+.st-txt{display:flex;flex-direction:column;gap:6px;min-width:0}
+.st-txt b{font-size:15px;color:#fff}
+.st-txt .status{color:#B5BFEA}
+.station .bar{background:var(--space-2);border-color:var(--space-line)}
+.station .bar i{background:#8FA6FF}
+.station .btn:disabled{background:#232E63;color:#9BA6D8;box-shadow:inset 0 0 0 1px var(--space-line)}
+
+.fine{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 14px;font-size:12px;color:var(--muted);padding-inline:4px}
+.link{background:none;border:0;padding:0;font:inherit;color:var(--muted);text-decoration:underline;cursor:pointer}
+
+.bonus{position:fixed;z-index:15;border:0;border-radius:99px;padding:12px 16px;font:400 17px/1 var(--font-display);
+  background:var(--gold);color:#2A1A00;cursor:pointer;box-shadow:0 0 0 4px var(--gold-glow),0 8px 20px rgba(0,0,0,.3);animation:bob 1.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+
+#toasts{position:fixed;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:20;
+  display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.toast{max-width:440px;padding:10px 14px;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:600;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);animation:tin .2s ease-out}
+.toast.gold{background:var(--gold);color:#2A1A00;font:400 18px/1.25 var(--font-display);padding:14px 18px;text-align:center}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .hit.pop svg,.spark,.toast,.orb,.bonus{animation:none}
+  .float{animation:none;opacity:1}
+  .bar i{transition:none}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF2A8"/><stop offset=".5" stop-color="#F6C631"/><stop offset="1" stop-color="#C98F00"/></linearGradient>
+  <linearGradient id="gGoldDark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4C430"/><stop offset="1" stop-color="#A87400"/></linearGradient>
+</defs></svg>
+
+<div class="page">
+  <div class="brand">
+    <h1>Clicquea un Huevo</h1>
+    <p>Consigue huevos y gana mucho dinero!</p>
+  </div>
+  <header class="hud">
+    <div>
+      <div class="money-l">💵 Tu dinero</div>
+      <div class="money" id="money">$0</div>
+    </div>
+    <div class="stats" aria-label="Estadísticas">
+      <div>👆 Por clic<b id="sClick">$1</b></div>
+      <div>🤖 Automático<b id="sAuto">$0/s</b></div>
+      <div>✖️ Multiplicador<b id="sMult">x1</b></div>
+    </div>
+    <div class="frenzy" id="frenzy" hidden></div>
+  </header>
+
+  <main class="wrap">
+    <section aria-labelledby="hFarm">
+      <div class="sec-head"><h2 id="hFarm">🐔 Tu granja</h2><span class="count" id="count"></span></div>
+      <p class="hint" id="hint"></p>
+      <div class="pagebar" id="pagebar" role="tablist" aria-label="Páginas de animales" hidden></div>
+      <div class="pens" id="pens"></div>
+    </section>
+
+    <aside class="side">
+      <section class="panel" aria-labelledby="hInc">
+        <h2 id="hInc">🥚 Incubadora</h2>
+        <p id="incNote"></p>
+        <button class="btn incbtn" id="incBtn" type="button"><span id="incLabel">Incubar un huevo</span><span id="incCost"></span></button>
+      </section>
+
+      <section class="panel" aria-label="Tienda">
+        <div class="tabs" role="tablist" aria-label="Secciones de la tienda">
+          <button class="tab" role="tab" id="tabU" type="button" aria-selected="true" aria-controls="panU" data-t="U"><span>🛠️ Utilidades</span><small class="n" id="nU"></small></button>
+          <button class="tab" role="tab" id="tabM" type="button" aria-selected="false" aria-controls="panM" data-t="M"><span>✨ Mejoras</span><small class="n" id="nM"></small></button>
+          <button class="tab" role="tab" id="tabL" type="button" aria-selected="false" aria-controls="panL" data-t="L"><span>🏆 Logros</span><small class="n" id="nL"></small></button>
+        </div>
+
+        <div id="panU" role="tabpanel" aria-labelledby="tabU">
+          <h2>🛠️ Utilidades</h2>
+          <p class="lead" style="margin-top:6px;margin-bottom:10px">Herramientas que cambian cómo ganas dinero.</p>
+          <div class="station off" id="station">
+            <button class="st-hit" id="stHit" type="button" aria-label="Estación de huevos espacial: tocar para acelerar la cápsula">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle cx="60" cy="60" r="58" fill="#0E1430"/>
+                <g fill="#C9D3FF"><circle cx="18" cy="26" r="1.4"/><circle cx="96" cy="18" r="1.1"/><circle cx="106" cy="72" r="1.5"/><circle cx="22" cy="94" r="1.2"/><circle cx="72" cy="108" r="1"/><circle cx="44" cy="10" r="1"/></g>
+                <circle cx="60" cy="60" r="44" fill="none" stroke="#3A4A93" stroke-width="1" stroke-dasharray="2 4"/>
+                <g transform="translate(60 60) scale(.42) translate(-60 -66)">
+                  <path d="M60 20C82 20 95 52 95 74C95 98 79 112 60 112C41 112 25 98 25 74C25 52 38 20 60 20Z" fill="#F4E7D1" stroke="#8C7BFF" stroke-width="6"/>
+                  <g fill="#D9C3A0"><circle cx="46" cy="86" r="3"/><circle cx="72" cy="94" r="2.6"/><circle cx="76" cy="68" r="2.8"/><circle cx="54" cy="64" r="2.4"/></g>
+                </g>
+                <g class="orb"><g transform="translate(60 16)">
+                  <rect x="-16" y="-2.5" width="10" height="5" fill="#5B7CFF"/><rect x="6" y="-2.5" width="10" height="5" fill="#5B7CFF"/>
+                  <rect x="-4.5" y="-4.5" width="9" height="9" rx="2" fill="#E8ECFF"/>
+                  <ellipse cx="0" cy="8" rx="4" ry="5.2" fill="#FFD84D"/>
+                </g></g>
+              </svg>
+            </button>
+            <div class="st-txt">
+              <b id="stName">🛰️ Estación de huevos espacial</b>
+              <div class="status" id="stDesc"></div>
+              <div class="bar"><i id="stBar"></i></div>
+              <div class="status" id="stStatus"></div>
+              <button class="btn" id="stBuy" type="button"></button>
+            </div>
+          </div>
+          <ul class="ups" id="ups"></ul>
+        </div>
+
+        <div id="panM" role="tabpanel" aria-labelledby="tabM" hidden>
+          <h2>✨ Mejoras</h2>
+          <p class="lead" style="margin-top:6px;margin-bottom:10px">Suben lo que ganas y hacen más fuertes a tus utilidades.</p>
+          <ul class="ups" id="mejs"></ul>
+        </div>
+
+        <div id="panL" role="tabpanel" aria-labelledby="tabL" hidden>
+          <h2>🏆 Logros</h2>
+          <p class="lead" style="margin-top:6px;margin-bottom:10px" id="achNote"></p>
+          <ul class="ups" id="achs"></ul>
+        </div>
+      </section>
+
+      <div class="fine">
+        <span id="fTotal"></span>
+        <span id="fGold"></span>
+        <button class="link" id="reset" type="button">Reiniciar partida</button>
+      </div>
+    </aside>
+  </main>
+</div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+var KEY = 'huevo-dorado-v1';
+var NAMES = ['Huevo','Pollito recién nacido','Pollito','Pollo joven','Gallina'];
+var GNAMES = ['Huevo dorado','Pollito dorado recién nacido','Pollito dorado','Pollo dorado joven','Gallina dorada'];
+var STAGE_MULT = [1, 2, 4, 8, 16];
+var EVO_BASE = {2: 30, 3: 120, 4: 450};
+var FIRST_HATCH = 10;
+var ABS_MAX = 5000;
+var EXP_MAX = 75;
+var LUMP_HENS = 60;
+var ST_MAX = 10;
+
+var UTIL = [
+  {id:'maiz',  emo:'🌽', name:'Maíz de calidad',     desc:'+$1 por cada clic base',                              max:60, base:25,  grow:1.55},
+  {id:'auto',  emo:'🤖', name:'Picoteo automático',  desc:'Cada animal nacido picotea solo, +0.5 clics/s',       max:10, base:120, grow:1.8},
+  {id:'crit',  emo:'🎯', name:'Picotazo certero',    desc:'+5% de probabilidad de un clic crítico (x5)',         max:10, base:200, grow:2.0},
+  {id:'chain', emo:'🔗', name:'Cacareo en cadena',   desc:'Cada clic paga también +10% de los demás animales',   max:10, base:400, grow:2.2},
+  {id:'incu',  emo:'🔥', name:'Incubadora caliente', desc:'Los huevos eclosionan 1.5 s antes',                   max:8,  base:150, grow:2.2}
+];
+var MEJ = [
+  {id:'premio',   emo:'💰', name:'Precio premium',      desc:'Todo el dinero que ganas sube +25% por nivel',                         max:20, base:800,  grow:1.85},
+  {id:'maiz2',    emo:'🌾', name:'Maíz transgénico',    desc:'Maíz de calidad rinde +25% más por nivel',                             max:10, base:1500, grow:2.1},
+  {id:'turbo',    emo:'⚡', name:'Turbo picoteo',       desc:'Picoteo automático: +0.25 clics/s por animal y nivel',                  max:10, base:2000, grow:2.2},
+  {id:'supercrit',emo:'💥', name:'Súper crítico',       desc:'El clic crítico sube de x5 a x7, x9, x11…',                            max:10, base:2500, grow:2.2},
+  {id:'iman',     emo:'🧲', name:'Imán de monedas',     desc:'Cacareo en cadena paga +5% más de cada animal por nivel',              max:10, base:3000, grow:2.3},
+  {id:'genetica', emo:'🧬', name:'Genética dorada',     desc:'+2% de probabilidad de huevo dorado por nivel',                        max:10, base:1800, grow:2.0},
+  {id:'pepita',   emo:'🏅', name:'Pepita premium',      desc:'Pollito dorado: +5% de probabilidad de x2 permanente y +25% de premio', max:8,  base:4000, grow:2.4},
+  {id:'propulsor',emo:'🚀', name:'Propulsores',         desc:'La estación espacial entrega cápsulas 8% más rápido por nivel',        max:6,  base:5000, grow:2.4},
+  {id:'granero',  emo:'🏚️', name:'Granero ampliado',    desc:'+2 espacios para animales por nivel',                                  max:4,  base:2500, grow:3.2},
+  {id:'ayudante', emo:'🧑‍🌾', name:'Granjero ayudante',   desc:'Nivel 1: hace crecer a tus animales solo. Nivel 2: también incuba huevos', max:2, base:6000, grow:6},
+  {id:'expansion', emo:'🗺️', name:'Expansión de granja', desc:'+1 espacio para animales por nivel. Al nivel máximo el espacio es infinito', maxDesc:'♾️ Espacio infinito: puedes tener todos los animales que quieras', maxToast:'♾️ ¡Expansión máxima! Tu granja ya no tiene límite de animales', max:75, base:2000, grow:1.12}
+];
+var ACH = [
+  {id:'a1', emo:'🐣', name:'Primer pollito',        desc:'Eclosiona tu primer huevo',            ok:function(){ return S.animals.some(function(a){ return a.hatched; }); }},
+  {id:'a2', emo:'🐔', name:'Gallina orgullosa',     desc:'Ten una gallina',                      ok:function(){ return hasHen(); }},
+  {id:'a3', emo:'👨‍🌾', name:'Granjero',              desc:'Ten 5 animales',                       ok:function(){ return S.animals.length >= 5; }},
+  {id:'a4', emo:'🏡', name:'Gallinero lleno',       desc:'Ten 12 animales',                      ok:function(){ return S.animals.length >= 12; }},
+  {id:'a5', emo:'💵', name:'Primer millar',         desc:'Gana $1,000 en total',                 ok:function(){ return S.total >= 1e3; }},
+  {id:'a6', emo:'💎', name:'Cien mil',              desc:'Gana $100,000 en total',               ok:function(){ return S.total >= 1e5; }},
+  {id:'a7', emo:'🤑', name:'Millonario',            desc:'Gana $1,000,000 en total',             ok:function(){ return S.total >= 1e6; }},
+  {id:'a8', emo:'🌟', name:'Pollito dorado',        desc:'Eclosiona un huevo dorado',            ok:function(){ return S.golds >= 1; }},
+  {id:'a9', emo:'👑', name:'Rey dorado',            desc:'Eclosiona 5 huevos dorados',           ok:function(){ return S.golds >= 5; }},
+  {id:'a10',emo:'🛰️', name:'Cosmonauta',            desc:'Construye la estación espacial',       ok:function(){ return S.station.lvl >= 1; }},
+  {id:'a11',emo:'🌽', name:'Cazador de lluvias',    desc:'Atrapa 3 lluvias de maíz',             ok:function(){ return S.frenzies >= 3; }},
+  {id:'a12',emo:'🛠️', name:'Maestro de utilidades', desc:'Suma 25 niveles en utilidades',        ok:function(){ return UTIL.reduce(function(s, u){ return s + S.up[u.id]; }, 0) >= 25; }}
+];
+
+function zeros(list){ var o = {}; list.forEach(function(x){ o[x.id] = 0; }); return o; }
+function fresh(){
+  return {
+    money:0, total:0, mult:1, golds:0, nextId:2, frenzies:0,
+    up:zeros(UTIL), mj:zeros(MEJ), ach:{}, station:{lvl:0, t:0, sent:0},
+    animals:[{id:1, stage:0, golden:false, hatched:false, first:true, prog:0}]
+  };
+}
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(!raw) return fresh();
+    var d = JSON.parse(raw), f = fresh();
+    if(!d || !Array.isArray(d.animals) || !d.animals.length) return f;
+    f.money = +d.money || 0; f.total = +d.total || 0; f.mult = +d.mult || 1; f.golds = +d.golds || 0; f.frenzies = +d.frenzies || 0;
+    UTIL.forEach(function(u){ f.up[u.id] = clamp(+(d.up && d.up[u.id]) || 0, 0, u.max); });
+    MEJ.forEach(function(m){ f.mj[m.id] = clamp(+(d.mj && d.mj[m.id]) || 0, 0, m.max); });
+    ACH.forEach(function(a){ if(d.ach && d.ach[a.id]) f.ach[a.id] = true; });
+    if(d.station){ f.station = {lvl:clamp(+d.station.lvl || 0, 0, ST_MAX), t:+d.station.t || 0, sent:+d.station.sent || 0}; }
+    f.animals = d.animals.slice(0, ABS_MAX).map(function(x){
+      return {id:+x.id||0, stage:clamp(+x.stage||0, 0, 4), golden:!!x.golden, hatched:!!x.hatched, first:!!x.first, prog:+x.prog||0};
+    });
+    var top = 0; f.animals.forEach(function(a){ if(a.id > top) top = a.id; });
+    f.nextId = Math.max(+d.nextId || 0, top + 1);
+    return f;
+  }catch(e){ return fresh(); }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+}
+
+var S = load();
+var frenzyUntil = 0, bonusEl = null, bonusTimer = 0;
+var nextBonus = performance.now() + (30 + Math.random() * 40) * 1000;
+
+/* ---------- utilidades de texto ---------- */
+function fmt(n){
+  if(!isFinite(n)) return '0';
+  if(n < 10) return String(Math.round(n * 10) / 10);
+  if(n < 1000) return String(Math.round(n));
+  var suf = ['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'];
+  var i = Math.min(suf.length - 1, Math.floor(Math.log10(n) / 3));
+  var v = n / Math.pow(1000, i);
+  return v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0) + suf[i];
+}
+function money(n){ return '$' + (n < 1e6 ? Math.floor(n).toLocaleString('en-US') : fmt(n)); }
+function setText(el, t){ if(el.textContent !== t) el.textContent = t; }
+
+/* ---------- reglas del juego ---------- */
+function frenzyOn(){ return performance.now() < frenzyUntil; }
+function achCount(){ return ACH.filter(function(a){ return S.ach[a.id]; }).length; }
+function gm(){ return (1 + 0.25 * S.mj.premio) * (1 + 0.05 * achCount()) * (frenzyOn() ? 5 : 1); }
+function maizBonus(){ return S.up.maiz * (1 + 0.25 * S.mj.maiz2); }
+function cv(stage, golden){ return (1 + maizBonus()) * STAGE_MULT[stage] * (golden ? 2 : 1) * S.mult * gm(); }
+function clickValue(a){ return cv(a.stage, a.golden); }
+function critMult(){ return 5 + 2 * S.mj.supercrit; }
+function critChance(){ return S.up.crit * 0.05; }
+function expCrit(){ return 1 + critChance() * (critMult() - 1); }
+function autoRate(){ return S.up.auto > 0 ? S.up.auto * (0.5 + 0.25 * S.mj.turbo) : 0; }
+function chainFrac(){ return S.up.chain * (0.1 + 0.05 * S.mj.iman); }
+function goldChance(space){ return 0.15 + 0.02 * S.mj.genetica + (space ? 0.1 : 0); }
+function x2Chance(){ return 0.4 + 0.05 * S.mj.pepita; }
+function maxAnimals(){ return S.mj.expansion >= EXP_MAX ? Infinity : 12 + 2 * S.mj.granero + S.mj.expansion; }
+function incTime(){ return 15 - 1.5 * S.up.incu; }
+function stCycle(){ return Math.max(5, (60 - 5 * S.station.lvl) * (1 - 0.08 * S.mj.propulsor)); }
+function stCost(){ return Math.round(3000 * Math.pow(2.3, S.station.lvl)); }
+function hasHen(){ return S.animals.some(function(a){ return a.hatched && a.stage === 4; }); }
+/* Los costos crecen rápido con los primeros 12 animales y después más suave, para que una granja enorme siga siendo jugable. */
+function evoCost(a){
+  var i = S.animals.indexOf(a);
+  return Math.round(EVO_BASE[a.stage + 1] * Math.pow(1.45, Math.min(i, 12)) * (1 + 0.06 * Math.max(0, i - 12)));
+}
+function incCost(){
+  var n = S.animals.length;
+  return Math.round(250 * Math.pow(1.9, Math.min(n - 1, 11)) * Math.pow(1.1, Math.max(0, n - 12)));
+}
+function itemCost(u, key){ return Math.round(u.base * Math.pow(u.grow, S[key][u.id])); }
+function bestClick(){ var b = 0; S.animals.forEach(function(a){ var v = clickValue(a); if(v > b) b = v; }); return b; }
+function autoIncome(){
+  var r = autoRate(), t = 0;
+  if(!r) return 0;
+  S.animals.forEach(function(a){ if(a.hatched) t += r * clickValue(a) * expCrit(); });
+  return t;
+}
+function add(x){ S.money += x; S.total += x; }
+function label(a){
+  var n = !a.hatched ? (a.golden ? GNAMES : NAMES)[0] + (a.first ? '' : ' en incubación') : (a.golden ? GNAMES : NAMES)[a.stage];
+  return a.golden ? '⭐ ' + n : n;
+}
+function frac(a){ return a.first ? Math.min(1, S.total / FIRST_HATCH) : Math.min(1, a.prog / incTime()); }
+function crackLevel(a){ if(a.hatched) return 0; var f = frac(a); return f > 0.8 ? 2 : f > 0.45 ? 1 : 0; }
+
+/* ---------- dibujo de los animales ---------- */
+function stars(){
+  return '<path class="spark" style="animation-delay:0s" d="M0-7L2-2 7 0 2 2 0 7-2 2-7 0-2-2Z" transform="translate(16 30)" fill="#FFF3B0"/>' +
+         '<path class="spark" style="animation-delay:.6s" d="M0-6L1.8-1.8 6 0 1.8 1.8 0 6-1.8 1.8-6 0-1.8-1.8Z" transform="translate(104 24)" fill="#FFF3B0"/>' +
+         '<path class="spark" style="animation-delay:1.1s" d="M0-5L1.5-1.5 5 0 1.5 1.5 0 5-1.5 1.5-5 0-1.5-1.5Z" transform="translate(100 96)" fill="#FFF3B0"/>';
+}
+function art(a){
+  var g = a.golden, st = a.stage;
+  var sk = g ? '#6B4A00' : '#3B2F20';
+  var line = 'stroke="' + sk + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"';
+  var eye = '#2B1D12', beak = '#F28C1F', comb = '#D8432F';
+  var shell = g ? 'url(#gGold)' : '#F4E7D1';
+  var s = '<svg viewBox="0 0 120 120" role="img" aria-hidden="true">';
+  s += '<ellipse cx="60" cy="113" rx="' + (st === 4 ? 40 : 32) + '" ry="5" fill="rgba(0,0,0,.18)"/>';
+
+  if(!a.hatched){
+    s += '<path d="M60 20C82 20 95 52 95 74C95 98 79 112 60 112C41 112 25 98 25 74C25 52 38 20 60 20Z" fill="' + shell + '" ' + line + '/>';
+    if(!g){
+      s += '<g fill="#D9C3A0"><circle cx="44" cy="86" r="2.4"/><circle cx="70" cy="94" r="2"/><circle cx="76" cy="70" r="2.2"/><circle cx="52" cy="66" r="1.8"/></g>';
+    }
+    s += '<ellipse cx="46" cy="48" rx="6" ry="12" transform="rotate(-20 46 48)" fill="rgba(255,255,255,.55)"/>';
+    var c = crackLevel(a);
+    if(c >= 1) s += '<path d="M42 64L53 72 47 82 60 90" fill="none" ' + line + '/>';
+    if(c >= 2) s += '<path d="M78 58L68 68 79 77 70 86" fill="none" ' + line + '/>';
+    if(g) s += stars();
+    return s + '</svg>';
+  }
+
+  var body = g ? 'url(#gGold)' : (st === 3 ? '#F5C542' : st === 4 ? '#FBF6EC' : '#FFD84D');
+  var wing = g ? 'url(#gGoldDark)' : (st === 3 ? '#E0A82E' : st === 4 ? '#E4CFA8' : '#F2C230');
+
+  if(st === 1){
+    s += '<circle cx="60" cy="62" r="24" fill="' + body + '" ' + line + '/>';
+    s += '<path d="M58 40Q60 30 65 39" fill="none" ' + line + '/>';
+    s += '<circle cx="52" cy="58" r="3.2" fill="' + eye + '"/><circle cx="68" cy="58" r="3.2" fill="' + eye + '"/>';
+    s += '<path d="M55 66L65 66 60 74Z" fill="' + beak + '" ' + line + '/>';
+    s += '<path d="M32 82L42 74 51 84 60 74 69 84 78 74 88 82C88 100 76 112 60 112C44 112 32 100 32 82Z" fill="' + shell + '" ' + line + '/>';
+  } else if(st === 2){
+    s += '<path d="M52 104V112M68 104V112M46 112H58M62 112H74" fill="none" stroke="#E8871E" stroke-width="3" stroke-linecap="round"/>';
+    s += '<circle cx="60" cy="72" r="32" fill="' + body + '" ' + line + '/>';
+    s += '<path d="M56 41Q54 28 64 38" fill="none" ' + line + '/>';
+    s += '<ellipse cx="44" cy="78" rx="10" ry="14" fill="' + wing + '" ' + line + '/>';
+    s += '<circle cx="73" cy="62" r="3.6" fill="' + eye + '"/>';
+    s += '<path d="M86 68L99 72 86 77Z" fill="' + beak + '" ' + line + '/>';
+  } else if(st === 3){
+    s += '<path d="M24 68Q8 52 16 38Q27 48 31 62Z" fill="' + wing + '" ' + line + '/>';
+    s += '<path d="M48 98V112M64 98V112M42 112H54M58 112H70" fill="none" stroke="#E8871E" stroke-width="3" stroke-linecap="round"/>';
+    s += '<circle cx="80" cy="33" r="5" fill="' + comb + '" ' + line + '/><circle cx="89" cy="34" r="5" fill="' + comb + '" ' + line + '/>';
+    s += '<circle cx="84" cy="50" r="17" fill="' + body + '" ' + line + '/>';
+    s += '<path d="M99 48L110 52 99 56Z" fill="' + beak + '" ' + line + '/>';
+    s += '<circle cx="89" cy="46" r="3" fill="' + eye + '"/>';
+    s += '<ellipse cx="54" cy="76" rx="34" ry="26" fill="' + body + '" ' + line + '/>';
+    s += '<ellipse cx="52" cy="77" rx="16" ry="11" fill="' + wing + '" ' + line + '/>';
+  } else {
+    s += '<path d="M20 60Q3 42 12 25Q27 35 31 57Z" fill="' + wing + '" ' + line + '/>';
+    s += '<path d="M18 74Q2 66 6 48Q21 54 27 70Z" fill="' + wing + '" ' + line + '/>';
+    s += '<path d="M46 102V112M64 102V112M40 112H52M58 112H70" fill="none" stroke="#E8871E" stroke-width="3" stroke-linecap="round"/>';
+    s += '<circle cx="84" cy="22" r="6" fill="' + comb + '" ' + line + '/><circle cx="92" cy="20" r="6" fill="' + comb + '" ' + line + '/><circle cx="99" cy="24" r="5" fill="' + comb + '" ' + line + '/>';
+    s += '<ellipse cx="100" cy="57" rx="4" ry="7" fill="' + comb + '" ' + line + '/>';
+    s += '<circle cx="90" cy="40" r="18" fill="' + body + '" ' + line + '/>';
+    s += '<path d="M106 37L118 42 106 47Z" fill="' + beak + '" ' + line + '/>';
+    s += '<circle cx="96" cy="36" r="3.2" fill="' + eye + '"/>';
+    s += '<ellipse cx="54" cy="74" rx="38" ry="30" fill="' + body + '" ' + line + '/>';
+    s += '<path d="M32 74Q36 62 52 64Q74 66 72 84Q60 94 42 88Q30 84 32 74Z" fill="' + wing + '" ' + line + '/>';
+    s += '<path d="M40 76Q50 78 60 76" fill="none" ' + line + ' opacity=".55"/>';
+  }
+  if(g) s += stars();
+  return s + '</svg>';
+}
+
+/* ---------- granja ---------- */
+var pensEl = document.getElementById('pens');
+var pens = new Map();
+
+function floatIn(host, text, cls, cx, cy){
+  var r = host.getBoundingClientRect();
+  var s = document.createElement('span');
+  s.className = 'float ' + (cls || '');
+  s.textContent = text;
+  s.style.left = (cx - r.left) + 'px';
+  s.style.top = (cy - r.top) + 'px';
+  host.appendChild(s);
+  setTimeout(function(){ s.remove(); }, 850);
+}
+function popAnim(p){
+  if(!p) return;
+  p.hit.classList.remove('pop');
+  void p.hit.offsetWidth;
+  p.hit.classList.add('pop');
+}
+function bindPress(btn, fn){
+  btn.addEventListener('pointerdown', function(e){
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    fn(e.clientX, e.clientY);
+  });
+  btn.addEventListener('click', function(e){
+    if(e.detail === 0){
+      var r = btn.getBoundingClientRect();
+      fn(r.left + r.width / 2, r.top + r.height / 2);
+    }
+  });
+}
+
+function makePen(a){
+  var el = document.createElement('article');
+  el.className = 'pen';
+  el.innerHTML =
+    '<button class="hit" type="button"></button>' +
+    '<div><h3 class="nm"></h3><p class="val"></p></div>' +
+    '<div class="foot">' +
+      '<div class="prog"><div class="bar"><i></i></div><div class="status"></div></div>' +
+      '<button class="btn evo" type="button"></button>' +
+      '<p class="status done">✅ Crecimiento completo</p>' +
+    '</div>';
+  var p = {
+    a:a, el:el, key:'',
+    hit:el.querySelector('.hit'), nm:el.querySelector('.nm'), val:el.querySelector('.val'),
+    prog:el.querySelector('.prog'), bar:el.querySelector('.bar i'), status:el.querySelector('.prog .status'),
+    evo:el.querySelector('.evo'), done:el.querySelector('.done')
+  };
+  bindPress(p.hit, function(x, y){ peck(p, x, y); });
+  p.evo.addEventListener('click', function(){ growAnimal(a, false); render(); });
+  pensEl.appendChild(el);
+  pens.set(a.id, p);
+  return p;
+}
+
+function peck(p, x, y){
+  var a = p.a;
+  var v = clickValue(a);
+  var crit = Math.random() < critChance();
+  if(crit) v *= critMult();
+  var gain = v;
+  var cf = chainFrac();
+  if(cf > 0){
+    S.animals.forEach(function(b){ if(b !== a) gain += clickValue(b) * cf; });
+  }
+  add(gain);
+  if(!a.hatched && !a.first) a.prog += 0.4;
+  popAnim(p);
+  floatIn(p.el, '+$' + fmt(gain), crit ? 'crit' : '', x, y);
+  render();
+}
+
+function growAnimal(a, silent){
+  if(!a.hatched || a.stage >= 4) return false;
+  var c = evoCost(a);
+  if(S.money < c) return false;
+  S.money -= c;
+  a.stage++;
+  popAnim(pens.get(a.id));
+  if(a.stage === 4 && !silent) toast(a.golden ? '🌟 ¡Tu gallina dorada ya es adulta!' : '🐔 ¡Ya eres una gallina! Puedes incubar más huevos.');
+  return true;
+}
+
+function hatch(a){
+  a.hatched = true;
+  a.stage = 1;
+  popAnim(pens.get(a.id));
+  if(!a.golden){
+    toast(a.first ? '🐣 ¡Tu huevo eclosionó!' : '🐣 ¡Eclosionó un pollito!');
+    return;
+  }
+  S.golds++;
+  if(Math.random() < x2Chance()){
+    S.mult *= 2;
+    toast('🌟 ¡Pollito dorado! Tus clics valen x2 para siempre (ahora x' + fmt(S.mult) + ')', 'gold', 5200);
+  } else {
+    var lump = Math.round(LUMP_HENS * cv(4, false) * (1 + 0.25 * S.mj.pepita));
+    add(lump);
+    toast('🌟 ¡Pollito dorado! Premio de ' + money(lump) + ' según tus mejoras', 'gold', 5200);
+  }
+}
+
+function incubate(){
+  if(!hasHen() || S.animals.length >= maxAnimals()) return false;
+  var c = incCost();
+  if(S.money < c) return false;
+  S.money -= c;
+  var gold = Math.random() < goldChance(false);
+  S.animals.push({id:S.nextId++, stage:0, golden:gold, hatched:false, first:false, prog:0});
+  toast(gold ? '✨ ¡Es un huevo dorado!' : '🥚 Nuevo huevo en la incubadora', gold ? 'gold' : '', gold ? 3200 : 2200);
+  return true;
+}
+
+/* ---------- estación espacial ---------- */
+var stEl = {
+  box:document.getElementById('station'), hit:document.getElementById('stHit'), name:document.getElementById('stName'),
+  desc:document.getElementById('stDesc'), bar:document.getElementById('stBar'), status:document.getElementById('stStatus'),
+  buy:document.getElementById('stBuy')
+};
+bindPress(stEl.hit, function(x, y){
+  if(S.station.lvl < 1) { toast('🛰️ Construye la estación para lanzar cápsulas'); return; }
+  S.station.t += 0.8;
+  floatIn(stEl.box, '+0.8 s', 'space', x, y);
+  render();
+});
+stEl.buy.addEventListener('click', function(){
+  if(S.station.lvl >= ST_MAX) return;
+  var c = stCost();
+  if(S.money < c) return;
+  S.money -= c;
+  S.station.lvl++;
+  toast(S.station.lvl === 1 ? '🛰️ ¡Estación espacial construida!' : '🛰️ Estación mejorada: nivel ' + S.station.lvl);
+  render();
+});
+function deliver(){
+  S.station.sent++;
+  if(S.animals.length < maxAnimals()){
+    var gold = Math.random() < goldChance(true);
+    S.animals.push({id:S.nextId++, stage:0, golden:gold, hatched:false, first:false, prog:0});
+    toast(gold ? '🚀 ¡Cápsula espacial con un huevo dorado!' : '🚀 Llegó una cápsula con un huevo', gold ? 'gold' : '', gold ? 3600 : 2400);
+  } else {
+    var c = Math.round(40 * bestClick());
+    add(c);
+    toast('🚀 Granja llena: la cápsula pagó ' + money(c));
+  }
+}
+
+/* ---------- tienda: utilidades, mejoras y logros ---------- */
+function makeRows(list, ulEl, key){
+  return list.map(function(u){
+    var li = document.createElement('li');
+    li.className = 'up';
+    li.innerHTML = '<span class="emo" aria-hidden="true"></span><div class="txt"><b></b><span class="d"></span><em></em></div><button class="btn" type="button"></button>';
+    var row = {u:u, key:key, li:li, nm:li.querySelector('b'), ds:li.querySelector('.d'), lv:li.querySelector('em'), btn:li.querySelector('button')};
+    li.querySelector('.emo').textContent = u.emo;
+    row.nm.textContent = u.name;
+    row.ds.textContent = u.desc;
+    row.btn.addEventListener('click', function(){
+      var st = S[key];
+      if(st[u.id] >= u.max) return;
+      var c = itemCost(u, key);
+      if(S.money < c) return;
+      S.money -= c;
+      st[u.id]++;
+      if(u.maxToast && st[u.id] >= u.max) toast(u.maxToast, 'gold', 5000);
+      else toast(u.emo + ' ' + u.name + ': nivel ' + st[u.id]);
+      render();
+    });
+    ulEl.appendChild(li);
+    return row;
+  });
+}
+var upRows = makeRows(UTIL, document.getElementById('ups'), 'up');
+var mjRows = makeRows(MEJ, document.getElementById('mejs'), 'mj');
+
+var achEl = document.getElementById('achs');
+var achRows = ACH.map(function(a){
+  var li = document.createElement('li');
+  li.className = 'up locked';
+  li.style.gridTemplateColumns = 'auto minmax(0,1fr)';
+  li.innerHTML = '<span class="emo" aria-hidden="true"></span><div class="txt"><b></b><span class="d"></span><em></em></div>';
+  li.querySelector('.emo').textContent = a.emo;
+  li.querySelector('b').textContent = a.name;
+  li.querySelector('.d').textContent = a.desc;
+  achEl.appendChild(li);
+  return {a:a, li:li, em:li.querySelector('em')};
+});
+
+function updateRows(rows){
+  var ready = 0;
+  rows.forEach(function(r){
+    var lvl = S[r.key][r.u.id], maxed = lvl >= r.u.max;
+    setText(r.lv, 'Nivel ' + lvl + ' de ' + r.u.max);
+    setText(r.ds, maxed && r.u.maxDesc ? r.u.maxDesc : r.u.desc);
+    if(maxed){ setText(r.btn, 'Máximo'); r.btn.disabled = true; }
+    else {
+      var c = itemCost(r.u, r.key);
+      setText(r.btn, '$' + fmt(c));
+      r.btn.disabled = S.money < c;
+      if(S.money >= c) ready++;
+    }
+  });
+  return ready;
+}
+
+var tabs = {U:'panU', M:'panM', L:'panL'};
+Object.keys(tabs).forEach(function(k){
+  document.getElementById('tab' + k).addEventListener('click', function(){
+    Object.keys(tabs).forEach(function(j){
+      var on = j === k;
+      document.getElementById('tab' + j).setAttribute('aria-selected', on ? 'true' : 'false');
+      document.getElementById(tabs[j]).hidden = !on;
+    });
+  });
+});
+
+function checkAch(){
+  ACH.forEach(function(a){
+    if(!S.ach[a.id] && a.ok()){
+      S.ach[a.id] = true;
+      toast('🏆 Logro: ' + a.name + ' (+5% de ganancias)', 'gold', 3600);
+    }
+  });
+}
+
+/* ---------- lluvia de maíz ---------- */
+function removeBonus(){
+  if(bonusEl){ bonusEl.remove(); bonusEl = null; }
+  clearTimeout(bonusTimer);
+  nextBonus = performance.now() + (50 + Math.random() * 60) * 1000;
+}
+function spawnBonus(){
+  var b = document.createElement('button');
+  b.className = 'bonus';
+  b.type = 'button';
+  b.textContent = '🌽 ¡Lluvia de maíz!';
+  b.style.left = Math.round(16 + Math.random() * Math.max(0, window.innerWidth - 230)) + 'px';
+  b.style.top = Math.round(140 + Math.random() * Math.max(0, window.innerHeight - 340)) + 'px';
+  b.addEventListener('click', function(){
+    frenzyUntil = performance.now() + 15000;
+    S.frenzies++;
+    removeBonus();
+    toast('🌽 ¡Frenesí! Todo lo que ganas vale x5 durante 15 s', 'gold', 3600);
+    render();
+  });
+  document.body.appendChild(b);
+  bonusEl = b;
+  bonusTimer = setTimeout(removeBonus, 9000);
+}
+
+/* ---------- avisos ---------- */
+var toastsEl = document.getElementById('toasts');
+function toast(msg, kind, ms){
+  var t = document.createElement('div');
+  t.className = 'toast' + (kind ? ' ' + kind : '');
+  t.textContent = msg;
+  toastsEl.appendChild(t);
+  while(toastsEl.children.length > 3) toastsEl.firstChild.remove();
+  setTimeout(function(){ t.remove(); }, ms || 2400);
+}
+
+/* ---------- pintar ---------- */
+var el = {
+  money:document.getElementById('money'), sClick:document.getElementById('sClick'), sAuto:document.getElementById('sAuto'),
+  sMult:document.getElementById('sMult'), count:document.getElementById('count'), hint:document.getElementById('hint'),
+  frenzy:document.getElementById('frenzy'),
+  incNote:document.getElementById('incNote'), incBtn:document.getElementById('incBtn'),
+  incLabel:document.getElementById('incLabel'), incCost:document.getElementById('incCost'),
+  fTotal:document.getElementById('fTotal'), fGold:document.getElementById('fGold'),
+  nU:document.getElementById('nU'), nM:document.getElementById('nM'), nL:document.getElementById('nL'),
+  achNote:document.getElementById('achNote')
+};
+
+function updatePen(p){
+  var a = p.a;
+  var key = a.stage + '|' + a.golden + '|' + a.hatched + '|' + crackLevel(a);
+  if(key !== p.key){
+    p.key = key;
+    p.hit.innerHTML = art(a);
+    p.el.classList.toggle('gold', a.golden);
+  }
+  var lab = 'Picotear: ' + label(a);
+  if(p.hit.getAttribute('aria-label') !== lab) p.hit.setAttribute('aria-label', lab);
+  setText(p.nm, label(a));
+  setText(p.val, '+$' + fmt(clickValue(a)) + ' por clic');
+  if(!a.hatched){
+    p.prog.hidden = false; p.evo.hidden = true; p.done.hidden = true;
+    p.bar.style.width = (frac(a) * 100).toFixed(1) + '%';
+    setText(p.status, a.first
+      ? '🥚 Eclosiona al ganar $' + FIRST_HATCH + ' (' + fmt(Math.min(S.total, FIRST_HATCH)) + '/' + FIRST_HATCH + ')'
+      : '🔥 Incubando, faltan ' + Math.max(0, incTime() - a.prog).toFixed(1) + ' s');
+  } else if(a.stage < 4){
+    var c = evoCost(a);
+    p.prog.hidden = true; p.done.hidden = true; p.evo.hidden = false;
+    setText(p.evo, '⬆️ Crecer a ' + NAMES[a.stage + 1].toLowerCase() + ' · $' + fmt(c));
+    p.evo.disabled = S.money < c;
+  } else {
+    p.prog.hidden = true; p.evo.hidden = true; p.done.hidden = false;
+  }
+}
+
+/* Cada 100 animales (dorados incluidos) pasan a una mini pestaña. Solo se dibuja la página abierta. */
+var PAGE = 100, curPage = 0, pageKey = '';
+var pageBar = document.getElementById('pagebar');
+function pageCount(){ return Math.max(1, Math.ceil(S.animals.length / PAGE)); }
+function syncPens(){
+  if(curPage >= pageCount()) curPage = pageCount() - 1;
+  var vis = S.animals.slice(curPage * PAGE, curPage * PAGE + PAGE);
+  var keep = {};
+  vis.forEach(function(a){ keep[a.id] = true; });
+  pens.forEach(function(p, id){ if(!keep[id]){ p.el.remove(); pens.delete(id); } });
+  vis.forEach(function(a){ if(!pens.has(a.id)) makePen(a); });
+  vis.forEach(function(a){ updatePen(pens.get(a.id)); });
+}
+function goPage(i){
+  curPage = i;
+  pens.forEach(function(p){ p.el.remove(); });
+  pens.clear();
+  pageKey = '';
+  render();
+}
+function renderPageBar(){
+  var n = S.animals.length, pc = pageCount(), i;
+  if(pc <= 1){
+    if(!pageBar.hidden){ pageBar.hidden = true; pageBar.innerHTML = ''; }
+    pageKey = '';
+    return;
+  }
+  var flags = '';
+  for(i = 0; i < pc; i++){
+    flags += S.animals.slice(i * PAGE, (i + 1) * PAGE).some(function(a){ return a.golden; }) ? '1' : '0';
+  }
+  var key = n + '|' + curPage + '|' + flags;
+  if(key === pageKey) return;
+  pageKey = key;
+  pageBar.hidden = false;
+  pageBar.innerHTML = '';
+  for(i = 0; i < pc; i++){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ptab';
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', i === curPage ? 'true' : 'false');
+    b.textContent = (flags.charAt(i) === '1' ? '⭐ ' : '') + (i * PAGE + 1) + '–' + Math.min(n, (i + 1) * PAGE);
+    (function(idx){ b.addEventListener('click', function(){ goPage(idx); }); })(i);
+    pageBar.appendChild(b);
+  }
+}
+
+function render(){
+  syncPens();
+  renderPageBar();
+
+  setText(el.money, money(S.money));
+  setText(el.sClick, '$' + fmt(bestClick()));
+  setText(el.sAuto, '$' + fmt(autoIncome()) + '/s');
+  setText(el.sMult, 'x' + fmt(S.mult * gm()));
+  var mx = maxAnimals();
+  setText(el.count, S.animals.length + ' / ' + (isFinite(mx) ? mx : '∞') + ' animales');
+
+  if(frenzyOn()){
+    el.frenzy.hidden = false;
+    setText(el.frenzy, '🌽 Frenesí x5 · ' + Math.ceil((frenzyUntil - performance.now()) / 1000) + ' s');
+  } else { el.frenzy.hidden = true; }
+
+  var first = S.animals[0];
+  var msg;
+  if(!first.hatched && first.first) msg = '👆 Toca el huevo para ganar dinero. Al juntar $' + FIRST_HATCH + ' eclosiona.';
+  else if(!hasHen()) msg = '⬆️ Paga por crecer: pollito, pollo joven y gallina. Con tu primera gallina podrás incubar más huevos.';
+  else msg = '✨ Toca varios animales a la vez. Cada huevo nuevo tiene ' + Math.round(goldChance(false) * 100) + '% de ser dorado.';
+  setText(el.hint, msg);
+
+  var hen = hasHen(), full = S.animals.length >= maxAnimals(), c = incCost();
+  setText(el.incNote, 'El huevo aparece al lado de tus gallinas y tarda ' + incTime().toFixed(1) + ' s en eclosionar (tus clics lo aceleran). Un huevo dorado da un premio según tus mejoras o un x2 permanente.');
+  setText(el.incLabel, !hen ? '🔒 Necesitas una gallina' : full ? '🏡 Granja llena' : '🥚 Incubar un huevo');
+  setText(el.incCost, (!hen || full) ? '' : '$' + fmt(c));
+  el.incBtn.disabled = !hen || full || S.money < c;
+
+  // estación espacial
+  var lv = S.station.lvl, sc = stCost();
+  stEl.box.classList.toggle('off', lv < 1);
+  if(lv < 1){
+    setText(stEl.desc, 'Aún no está construida. Lanza cápsulas con huevos gratis, con +10% de ser dorados.');
+    stEl.bar.style.width = '0%';
+    setText(stEl.status, 'Cápsula cada ' + stCycle().toFixed(0) + ' s al nivel 1');
+    setText(stEl.buy, 'Construir · $' + fmt(sc));
+    stEl.buy.disabled = S.money < sc;
+  } else {
+    var cyc = stCycle();
+    setText(stEl.desc, 'Nivel ' + lv + ' de ' + ST_MAX + ' · cápsula cada ' + cyc.toFixed(1) + ' s. Toca la estación para acelerarla.');
+    stEl.bar.style.width = (Math.min(1, S.station.t / cyc) * 100).toFixed(1) + '%';
+    setText(stEl.status, 'Próxima cápsula en ' + Math.max(0, cyc - S.station.t).toFixed(1) + ' s · enviadas: ' + S.station.sent);
+    if(lv >= ST_MAX){ setText(stEl.buy, 'Nivel máximo'); stEl.buy.disabled = true; }
+    else { setText(stEl.buy, 'Mejorar · $' + fmt(sc)); stEl.buy.disabled = S.money < sc; }
+  }
+
+  var rU = updateRows(upRows) + ((lv < ST_MAX && S.money >= sc) ? 1 : 0);
+  var rM = updateRows(mjRows);
+  setText(el.nU, rU > 0 ? rU + ' lista' + (rU > 1 ? 's' : '') : '');
+  setText(el.nM, rM > 0 ? rM + ' lista' + (rM > 1 ? 's' : '') : '');
+  setText(el.nL, achCount() + '/' + ACH.length);
+
+  achRows.forEach(function(r){
+    var on = !!S.ach[r.a.id];
+    r.li.classList.toggle('locked', !on);
+    r.li.classList.toggle('done', on);
+    setText(r.em, on ? '✅ Conseguido: +5% de ganancias' : '🔒 Pendiente');
+  });
+  setText(el.achNote, 'Cada logro suma +5% a todo lo que ganas. Bonus actual: +' + (achCount() * 5) + '%.');
+
+  setText(el.fTotal, '💵 Ganado en total: ' + money(S.total));
+  setText(el.fGold, '🌟 Pollitos dorados: ' + S.golds);
+}
+
+/* ---------- bucle ---------- */
+var helperT = 0;
+function step(dt, now){
+  var it = incTime();
+  S.animals.slice().forEach(function(a){
+    var p = pens.get(a.id);
+    if(!a.hatched){
+      if(a.first){ if(S.total >= FIRST_HATCH) hatch(a); }
+      else { a.prog += dt; if(a.prog >= it) hatch(a); }
+    } else if(S.up.auto > 0){
+      var inc = autoRate() * clickValue(a) * expCrit() * dt;
+      add(inc);
+      a._acc = (a._acc || 0) + inc;
+      a._t = (a._t || 0) + dt;
+      if(a._t >= 1){
+        if(p && a._acc >= 0.5 && !document.hidden && S.animals.length <= 24){
+          var r = p.hit.getBoundingClientRect();
+          floatIn(p.el, '+$' + fmt(a._acc), 'auto', r.left + r.width * (0.35 + Math.random() * 0.3), r.top + r.height * 0.35);
+        }
+        a._acc = 0; a._t = 0;
+      }
+    }
+  });
+
+  if(S.station.lvl > 0){
+    S.station.t += dt;
+    var cyc = stCycle();
+    if(S.station.t >= cyc){ S.station.t = 0; deliver(); }
+  }
+
+  helperT += dt;
+  if(helperT >= 0.5){
+    helperT = 0;
+    if(S.mj.ayudante >= 1){
+      S.animals.slice().forEach(function(a){ growAnimal(a, true); });
+    }
+    if(S.mj.ayudante >= 2 && hasHen() && S.animals.length < maxAnimals() && S.money >= incCost() * 1.5){
+      incubate();
+    }
+  }
+
+  checkAch();
+
+  if(!bonusEl && now >= nextBonus && !document.hidden) spawnBonus();
+}
+var tick = 0;
+var last = performance.now();
+setInterval(function(){
+  var now = performance.now();
+  var dt = Math.min((now - last) / 1000, 1);
+  last = now;
+  step(dt, now);
+  tick++;
+  if(S.animals.length <= 100 || tick % 3 === 0) render();
+}, 100);
+setInterval(save, 2000);
+document.addEventListener('visibilitychange', function(){ if(document.hidden) save(); });
+window.addEventListener('pagehide', save);
+
+el.incBtn.addEventListener('click', function(){ incubate(); render(); });
+
+var resetBtn = document.getElementById('reset'), resetTimer = 0;
+resetBtn.addEventListener('click', function(){
+  if(!resetTimer){
+    resetBtn.textContent = 'Toca otra vez para borrar todo';
+    resetTimer = setTimeout(function(){ resetBtn.textContent = 'Reiniciar partida'; resetTimer = 0; }, 4000);
+    return;
+  }
+  clearTimeout(resetTimer); resetTimer = 0;
+  resetBtn.textContent = 'Reiniciar partida';
+  S = fresh();
+  curPage = 0; pageKey = '';
+  frenzyUntil = 0;
+  removeBonus();
+  pens.forEach(function(p){ p.el.remove(); });
+  pens.clear();
+  save();
+  render();
+  toast('Partida reiniciada');
+});
+
+render();
+})();
+</script>
+
+</body></html>
